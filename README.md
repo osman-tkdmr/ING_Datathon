@@ -1,37 +1,176 @@
 # ING Datathon Churn Prediction
 
-This repository contains a notebook-based machine learning workflow for customer churn prediction using the ING Hubs Türkiye Datathon dataset. The project combines customer profile data with historical transaction behavior to build and evaluate classification models for predicting churn.
+This repository contains a notebook-based machine learning workflow for customer churn prediction using the ING Hubs Türkiye Datathon dataset. The project uses customer profile data and historical transaction behavior to train binary classification models that estimate whether a customer will churn.
+
+## Project Overview
+
+The repository implements a tabular classification pipeline for a churn prediction problem. The notebooks load customer, transaction history, and reference datasets, engineer features, train models, and export predictions. A Kaggle competition dataset is referenced through the Kaggle API, and the target variable is the binary column `churn`.
+
+No deep learning model was detected in the repository.
 
 ## Features
 
-- Customer churn prediction using tabular machine learning
-- Data preprocessing and feature engineering from customer and transaction history
-- Handling of missing values and categorical feature encoding
+The implemented workflow includes:
+
+- Data preprocessing
+- Missing value handling
+- Feature engineering from transaction history
 - Exploratory data analysis and visualization
-- Baseline model training with XGBoost
-- Advanced model experimentation with LightGBM and Optuna hyperparameter tuning
-- Custom evaluation metrics such as Gini, Recall@10%, and Lift@10%
-- Submission file generation for competition-style prediction outputs
+- Baseline model training
+- Cross-validation
+- Hyperparameter optimization with Optuna
+- Model evaluation with custom churn-oriented metrics
+- Prediction export for submission
 
-## Tech Stack
+## Repository Structure
 
-### Data Processing
+```text
+ING_Datathon/
+├── analysis.ipynb          # Exploratory analysis and feature investigation
+├── baseline_model.ipynb    # Baseline XGBoost experiments and evaluation
+├── model.ipynb             # Main LightGBM modeling workflow with Optuna
+├── preprocessing.ipynb     # Data cleaning, feature engineering, and CSV export
+├── pyproject.toml          # Python dependencies
+├── uv.lock                 # Locked dependency versions
+└── README.md               # Project documentation
+```
+
+No dedicated source package, data directory, or model checkpoint directory was detected in the repository.
+
+## Dataset
+
+The repository references a Kaggle competition dataset named `ing-hubs-turkiye-datathon`.
+
+The notebooks load the following files:
+
+- `customer_history.csv`
+- `customers.csv`
+- `referance_data.csv`
+- `referance_data_test.csv`
+- `sample_submission.csv`
+
+Key details detected from the repository:
+
+- Dataset source: Kaggle competition dataset
+- Task: binary classification
+- Target column: `churn`
+- Train/test structure: the repository uses `referance_data` for training labels and `referance_data_test` for test/reference data
+- Sample size and feature count: not explicitly documented in repository files
+
+## Exploratory Data Analysis
+
+The analysis notebook performs several exploratory checks and visualizations:
+
+- Churn distribution analysis
+- Missing value inspection
+- Categorical value distributions for fields such as `gender`, `work_type`, `work_sector`, and `province`
+- Numeric feature distribution plots
+- Correlation analysis between numeric variables and the target
+- Time-based transaction trend analysis
+- Investigation of customer history windows and customer-level aggregates
+
+The repository also includes feature engineering based on aggregated transaction history statistics such as minimum, maximum, median, and mean values per customer.
+
+## Data Preprocessing
+
+The preprocessing workflow includes:
+
+- Loading customer, history, and reference datasets
+- Filling missing values in `work_sector` using `work_type`
+- Creating a derived feature for customer age in months
+- Aggregating historical transaction features per customer
+- Merging customer-level features with churn labels and reference dates
+- Encoding categorical variables with one-hot encoding
+- Dropping non-model columns such as identifiers and date fields
+- Exporting prepared train and test CSV files
+
+## Models
+
+The following models were detected in the repository:
+
+| Model | Evidence | Purpose |
+| --- | --- | --- |
+| XGBoost | `baseline_model.ipynb` | Baseline classifier for churn prediction |
+| LightGBM | `model.ipynb` | Main model used in the final experiment workflow |
+| CatBoost | `pyproject.toml` | Dependency present, but no implementation was found in the notebooks |
+
+## Training Pipeline
+
+The workflow implemented by the notebooks is:
+
+Raw data
+
+↓
+
+Data loading and inspection
+
+↓
+
+Cleaning and missing value handling
+
+↓
+
+Feature engineering from customer history
+
+↓
+
+Dataset preparation for modeling
+
+↓
+
+Model training and validation
+
+↓
+
+Evaluation with churn-specific metrics
+
+↓
+
+Prediction export for submission
+
+## Evaluation
+
+The notebooks use the following evaluation metrics:
+
+- ROC-AUC
+- Gini
+- Recall@10%
+- Lift@10%
+
+The repository contains notebook output showing a reported Gini value of `0.5310` for the LightGBM experiment. The baseline notebook also contains evaluation output, but the repository does not include a single consolidated leaderboard or final submission score file.
+
+## Results
+
+The repository shows a progression from a simpler baseline to a more advanced model selection workflow:
+
+| Experiment | Model | Evidence | Notes |
+| --- | --- | --- | --- |
+| Baseline | XGBoost | `baseline_model.ipynb` | Early benchmark with custom evaluation metrics |
+| Main experiment | LightGBM | `model.ipynb` | Optuna-based tuning and stronger evaluation workflow |
+
+No separate final leaderboard file or exported benchmark summary was detected in the repository.
+
+## Technologies
+
+### Programming Languages
 
 - Python
+
+### Libraries
+
 - pandas
 - numpy
+- scikit-learn
 - pyarrow
 - fastparquet
 - dask
+- imbalanced-learn
 
-### Machine Learning
+### Machine Learning Frameworks
 
-- scikit-learn
 - XGBoost
 - LightGBM
 - CatBoost
-- imbalanced-learn
-- Optuna
 
 ### Visualization
 
@@ -39,62 +178,25 @@ This repository contains a notebook-based machine learning workflow for customer
 - seaborn
 - plotly
 
-### Project Tools
+### Development Tools
 
-- Jupyter notebooks
+- Jupyter Notebook
 - uv
 - Kaggle API
 
-## Project Structure
-
-```text
-ING_Datathon/
-├── analysis.ipynb          # Exploratory analysis, data quality checks, and feature investigation
-├── baseline_model.ipynb    # Early baseline model experiments and evaluation metrics
-├── model.ipynb             # Final modeling workflow with LightGBM and Optuna tuning
-├── preprocessing.ipynb     # Data cleaning, feature engineering, and export of training data
-├── pyproject.toml          # Python dependency definitions
-├── uv.lock                 # Locked dependency versions for reproducible installs
-└── README.md               # Project documentation
-```
-
-## Architecture
-
-The repository follows a notebook-centric data science workflow rather than a packaged application architecture. The practical structure is:
-
-- Data ingestion from Kaggle competition files
-- Data preprocessing and feature engineering in notebooks
-- Exploratory analysis and visualization
-- Model training and hyperparameter search
-- Prediction export for submission
-
-The main workflow is effectively a supervised learning pipeline for binary classification with tabular features derived from customer attributes and transaction history.
-
 ## Installation
 
-This project is intended to run in a Python environment with the dependencies listed in pyproject.toml.
-
-1. Clone the repository:
+The project is intended to run with Python 3.12, as indicated by the repository’s `.python-version` file.
 
 ```bash
 git clone https://github.com/osman-tkdmr/ING_Datathon.git
 cd ING_Datathon
-```
-
-2. Create and activate a virtual environment (recommended):
-
-```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-3. Install dependencies:
-
-```bash
 pip install -e .
 ```
 
-If you use uv, the project can also be installed with:
+If you use `uv`, the project can also be set up with:
 
 ```bash
 uv sync
@@ -102,143 +204,38 @@ uv sync
 
 ## Usage
 
-The repository is primarily used through the notebooks:
+The notebooks are the main entry points:
 
-- Start with preprocessing.ipynb to create the engineered training and test datasets.
-- Use analysis.ipynb to inspect data distributions, churn patterns, and feature behavior.
-- Run baseline_model.ipynb for an initial XGBoost baseline.
-- Use model.ipynb for the more advanced LightGBM-based modeling and submission generation.
+1. Run `preprocessing.ipynb` to prepare the training and test datasets.
+2. Use `analysis.ipynb` to inspect the data and understand churn patterns.
+3. Run `baseline_model.ipynb` for a simpler XGBoost baseline.
+4. Use `model.ipynb` for the main LightGBM-based training workflow and submission export.
 
-A typical flow is:
+The notebooks assume that the required CSV files are available locally or can be downloaded from Kaggle.
 
-1. Download or place the required data files in the project directory.
-2. Run preprocessing.ipynb.
-3. Train and evaluate the model in the modeling notebooks.
-4. Export predictions to a submission file.
+## Reproducibility
 
-## Configuration
+The repository contains some reproducibility signals:
 
-The notebooks expect the following data files to be available in the working directory or accessible through the Kaggle competition download path:
-
-- customer_history.csv
-- customers.csv
-- referance_data.csv
-- referance_data_test.csv
-- sample_submission.csv
-
-The notebooks use the Kaggle API to download the dataset through the competition identifier:
-
-```python
-from kaggle.api.kaggle_api_extended import KaggleApi
-from kaggle.api.kaggle_api_extended import competition_download
-
-path = competition_download('ing-hubs-turkiye-datathon')
-```
-
-If the dataset is not available locally, Kaggle credentials must be configured before running the notebooks.
-
-## Main Components
-
-### preprocessing.ipynb
-
-- Purpose: prepares the modeling dataset from raw customer and history files.
-- Responsibility: fills missing values, derives customer age-in-months, aggregates transaction history statistics, and exports training/test CSV files.
-- Relationship: serves as the input preparation step for the modeling notebooks.
-
-### analysis.ipynb
-
-- Purpose: examines data quality and business understanding of churn behavior.
-- Responsibility: profiles the dataset, visualizes churn patterns, analyzes missing values, and explores time-based customer behavior.
-- Relationship: supports feature selection and interpretation before model training.
-
-### baseline_model.ipynb
-
-- Purpose: establishes a baseline classifier.
-- Responsibility: builds an XGBoost-based model, evaluates it using custom churn metrics, and produces a first submission candidate.
-- Relationship: provides a simpler benchmark for comparison with later models.
-
-### model.ipynb
-
-- Purpose: implements the more advanced predictive pipeline.
-- Responsibility: trains LightGBM classifiers with Optuna tuning, evaluates them using Gini/Recall/Lift metrics, and creates a final submission artifact.
-- Relationship: represents the main modeling stage of the repository.
-
-## Workflow
-
-The end-to-end workflow implemented by the notebooks is:
-
-1. Load customer, transaction history, and reference datasets.
-2. Clean and enrich customer records.
-3. Aggregate historical transaction behavior into customer-level features.
-4. Merge customer features with churn labels and reference dates.
-5. Engineer categorical and numeric features for modeling.
-6. Train classification models using cross-validation and hyperparameter search.
-7. Evaluate models using churn-specific metrics.
-8. Generate predictions in a submission-ready format.
-
-## Dependencies
-
-| Library | Purpose |
-| --- | --- |
-| pandas | Data loading, transformation, and tabular manipulation |
-| numpy | Numerical operations and array handling |
-| scikit-learn | Preprocessing, train/test splitting, cross-validation, metrics |
-| XGBoost | Gradient boosting classifier used in the baseline workflow |
-| LightGBM | Gradient boosting classifier used in the main modeling notebook |
-| Optuna | Hyperparameter optimization |
-| matplotlib | Plotting and figure generation |
-| seaborn | Statistical visualizations |
-| plotly | Interactive charts |
-| pyarrow / fastparquet | Parquet I/O support |
-| kaggle | Dataset acquisition from Kaggle |
-
-## Error Handling
-
-The notebooks include basic defensive programming patterns for data processing:
-
-- Missing values are explicitly inspected and filled where appropriate.
-- Memory-safe parquet processing is implemented in the analysis notebook for large datasets.
-- Checkpointing is used during long-running windowed feature generation to avoid losing progress.
-- Exceptions during batch processing are printed and surfaced to the user.
-
-## Performance Notes
-
-The project includes several practical performance-oriented choices:
-
-- Parquet-based data handling for efficient storage and access
-- Chunked processing for window-based feature engineering
-- Checkpointing during large transformations to support interruption recovery
-- Use of tree-based models that scale well on tabular data
-- Sampling used in some exploratory visualizations for large datasets
+- `random_state=42` is used in several train/test and cross-validation steps
+- Dependency versions are locked in `uv.lock`
+- No dedicated configuration file for training parameters was detected
 
 ## Future Improvements
 
-Potential enhancements for this repository include:
+Potential next steps based on the current implementation:
 
-- Turning the notebooks into a modular Python package or pipeline script
-- Adding reproducible training configuration files
-- Implementing automated tests for preprocessing and feature generation
-- Adding model monitoring and experiment tracking
-- Expanding the feature set with temporal sequences and lag-based features
-- Packaging the workflow into a CLI or API for repeatable execution
-
-## Screenshots
-
-No screenshots are currently included in the repository.
+- Convert the notebook workflow into a modular training pipeline
+- Add automated tests for preprocessing and feature generation
+- Introduce experiment tracking and model registry tools
+- Expand feature engineering with lag-based or temporal features
+- Add explainability tools such as SHAP
+- Package the workflow into a CLI or API for repeatable deployment
 
 ## License
 
 No license file detected.
 
-## Contributing
+## Acknowledgements
 
-Contributions are welcome. A practical workflow would be:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Make your changes and keep the notebooks reproducible.
-4. Open a pull request with a clear summary of the update.
-
-## Author
-
-Author information is not available in the repository metadata. The project is currently documented as a notebook-based data science experiment rather than a packaged application.
+This repository references a Kaggle competition dataset and uses several open-source Python libraries. No additional acknowledgements or third-party citations were detected in the repository files.
