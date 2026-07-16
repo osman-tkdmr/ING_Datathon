@@ -11,3 +11,12 @@ wheels/
 
 # Data
 *.csv
+
+# Optuna study storage
+*.db
+
+# Trained model artifacts
+*.joblib
+
+# Generated plots
+*.png
