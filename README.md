@@ -1,241 +1,98 @@
-# ING Datathon Churn Prediction
+<div align="center">
 
-This repository contains a notebook-based machine learning workflow for customer churn prediction using the ING Hubs Türkiye Datathon dataset. The project uses customer profile data and historical transaction behavior to train binary classification models that estimate whether a customer will churn.
+# Customer Churn Prediction — ING Hubs Türkiye Datathon
 
-## Project Overview
+**An end-to-end machine learning pipeline that predicts customer churn from banking transaction history**
 
-The repository implements a tabular classification pipeline for a churn prediction problem. The notebooks load customer, transaction history, and reference datasets, engineer features, train models, and export predictions. A Kaggle competition dataset is referenced through the Kaggle API, and the target variable is the binary column `churn`.
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/dependency%20manager-uv-DE5FE9)](https://github.com/astral-sh/uv)
+[![LightGBM](https://img.shields.io/badge/model-LightGBM-02569B)](https://lightgbm.readthedocs.io/)
+[![XGBoost](https://img.shields.io/badge/baseline-XGBoost-EB0028)](https://xgboost.readthedocs.io/)
+[![Optuna](https://img.shields.io/badge/tuning-Optuna-2FA7D6)](https://optuna.org/)
+[![SHAP](https://img.shields.io/badge/explainability-SHAP-8A2BE2)](https://shap.readthedocs.io/)
 
-No deep learning model was detected in the repository.
+</div>
 
-## Features
+---
 
-The implemented workflow includes:
+## What this project is
 
-- Data preprocessing
-- Missing value handling
-- Feature engineering from transaction history
-- Exploratory data analysis and visualization
-- Baseline model training
-- Cross-validation
-- Hyperparameter optimization with Optuna
-- Model evaluation with custom churn-oriented metrics
-- Prediction export for submission
+A full ML workflow built for the **ING Hubs Türkiye Datathon** on Kaggle: given a customer's profile and up to two years of monthly transaction behavior, predict whether they will churn. It covers the complete lifecycle — data ingestion, feature engineering, model training and tuning, evaluation against a competition-specific business metric, and explainability — not just a single notebook that fits a model.
 
-## Repository Structure
+## Highlights
 
-```text
-ING_Datathon/
-├── analysis.ipynb          # Exploratory analysis and feature investigation
-├── baseline_model.ipynb    # Baseline XGBoost experiments and evaluation
-├── model.ipynb             # Main LightGBM modeling workflow with Optuna
-├── preprocessing.ipynb     # Data cleaning, feature engineering, and CSV export
-├── pyproject.toml          # Python dependencies
-├── uv.lock                 # Locked dependency versions
-└── README.md               # Project documentation
-```
-
-No dedicated source package, data directory, or model checkpoint directory was detected in the repository.
-
-## Dataset
-
-The repository references a Kaggle competition dataset named `ing-hubs-turkiye-datathon`.
-
-The notebooks load the following files:
-
-- `customer_history.csv`
-- `customers.csv`
-- `referance_data.csv`
-- `referance_data_test.csv`
-- `sample_submission.csv`
-
-Key details detected from the repository:
-
-- Dataset source: Kaggle competition dataset
-- Task: binary classification
-- Target column: `churn`
-- Train/test structure: the repository uses `referance_data` for training labels and `referance_data_test` for test/reference data
-- Sample size and feature count: not explicitly documented in repository files
-
-## Exploratory Data Analysis
-
-The analysis notebook performs several exploratory checks and visualizations:
-
-- Churn distribution analysis
-- Missing value inspection
-- Categorical value distributions for fields such as `gender`, `work_type`, `work_sector`, and `province`
-- Numeric feature distribution plots
-- Correlation analysis between numeric variables and the target
-- Time-based transaction trend analysis
-- Investigation of customer history windows and customer-level aggregates
-
-The repository also includes feature engineering based on aggregated transaction history statistics such as minimum, maximum, median, and mean values per customer.
-
-## Data Preprocessing
-
-The preprocessing workflow includes:
-
-- Loading customer, history, and reference datasets
-- Filling missing values in `work_sector` using `work_type`
-- Creating a derived feature for customer age in months
-- Aggregating historical transaction features per customer
-- Merging customer-level features with churn labels and reference dates
-- Encoding categorical variables with one-hot encoding
-- Dropping non-model columns such as identifiers and date fields
-- Exporting prepared train and test CSV files
-
-## Models
-
-The following models were detected in the repository:
-
-| Model | Evidence | Purpose |
-| --- | --- | --- |
-| XGBoost | `baseline_model.ipynb` | Baseline classifier for churn prediction |
-| LightGBM | `model.ipynb` | Main model used in the final experiment workflow |
-| CatBoost | `pyproject.toml` | Dependency present, but no implementation was found in the notebooks |
-
-## Training Pipeline
-
-The workflow implemented by the notebooks is:
-
-Raw data
-
-↓
-
-Data loading and inspection
-
-↓
-
-Cleaning and missing value handling
-
-↓
-
-Feature engineering from customer history
-
-↓
-
-Dataset preparation for modeling
-
-↓
-
-Model training and validation
-
-↓
-
-Evaluation with churn-specific metrics
-
-↓
-
-Prediction export for submission
-
-## Evaluation
-
-The notebooks use the following evaluation metrics:
-
-- ROC-AUC
-- Gini
-- Recall@10%
-- Lift@10%
-
-The repository contains notebook output showing a reported Gini value of `0.5310` for the LightGBM experiment. The baseline notebook also contains evaluation output, but the repository does not include a single consolidated leaderboard or final submission score file.
+- **Caught and fixed a critical temporal data leakage bug.** The original feature engineering aggregated a customer's *entire* transaction history regardless of the prediction date, meaning early-window training rows were built using up to two years of data from the future. Diagnosed via the raw date ranges, root-caused, and fixed by re-deriving every feature from only the data available as of each customer's reference date — the kind of bug that quietly inflates offline metrics and quietly wrecks production performance if it ships.
+- **Rebuilt the feature engineering pipeline for correctness *and* speed**, replacing a per-customer Python loop with a vectorized pandas implementation — verified behaviorally identical to the original across 1,500+ synthetic edge cases (missing channels, single-month customers, out-of-order records) before it ever touched real data, and ~3.3x faster at scale.
+- **Removed silent leakage in cross-validation** (a scaler fit on the full dataset before splitting) and **eliminated redundant code duplication** by consolidating the competition's custom evaluation metric into a single shared module used by every notebook.
+- **Built for reproducibility, not just a one-off run**: persisted Optuna hyperparameter search history to disk (survives kernel restarts), persisted trained models with `joblib`, and made environment setup (Kaggle credentials, GPU/CPU device selection) portable across machines instead of hardcoded.
+- **Added model explainability with SHAP**, surfacing which behavioral signals (transaction recency, digital channel usage, trend in activity) drive the model's churn predictions — the kind of output a retention/CRM team can actually act on.
 
 ## Results
 
-The repository shows a progression from a simpler baseline to a more advanced model selection workflow:
+| Metric | Score |
+| --- | --- |
+| 5-Fold Cross-Validated Composite Score¹ | **1.15 ± 0.02** |
+| Recall @ Top 10% Riskiest Customers | **32.1%** |
+| Lift @ Top 10% Riskiest Customers | **3.21x** |
 
-| Experiment | Model | Evidence | Notes |
-| --- | --- | --- | --- |
-| Baseline | XGBoost | `baseline_model.ipynb` | Early benchmark with custom evaluation metrics |
-| Main experiment | LightGBM | `model.ipynb` | Optuna-based tuning and stronger evaluation workflow |
+¹ A custom weighted metric (40% Gini, 30% Recall@10%, 30% Lift@10%) defined by the competition, scored relative to its own baseline model.
 
-No separate final leaderboard file or exported benchmark summary was detected in the repository.
+## Pipeline
+
+```
+Raw data (Kaggle API)
+        │
+        ▼
+Feature engineering  →  per-customer transaction aggregates, time-bounded to each prediction date
+        │
+        ▼
+Preprocessing  →  missing-value handling, rare-category grouping, one-hot encoding
+        │
+        ▼
+Model training  →  LightGBM + Optuna hyperparameter search (5-fold CV, early stopping)
+        │
+        ▼
+Evaluation  →  custom Gini / Recall@10% / Lift@10% composite metric
+        │
+        ▼
+Explainability  →  SHAP feature attribution
+        │
+        ▼
+Submission
+```
+
+## Repository structure
+
+```text
+ING_Datathon/
+├── preprocessing.ipynb     # Feature engineering, cleaning, train/test export
+├── analysis.ipynb          # Exploratory data analysis
+├── baseline_model.ipynb    # XGBoost baseline
+├── model.ipynb             # Main LightGBM model, tuning, evaluation, SHAP
+├── metrics.py              # Shared competition metric implementation
+├── pyproject.toml          # Dependencies
+└── uv.lock                 # Locked dependency versions
+```
 
 ## Technologies
 
-### Programming Languages
+`Python` · `pandas` · `NumPy` · `scikit-learn` · `LightGBM` · `XGBoost` · `CatBoost` · `Optuna` · `SHAP` · `imbalanced-learn` · `matplotlib` / `seaborn` / `plotly` · `uv` · `Kaggle API`
 
-- Python
-
-### Libraries
-
-- pandas
-- numpy
-- scikit-learn
-- pyarrow
-- fastparquet
-- dask
-- imbalanced-learn
-
-### Machine Learning Frameworks
-
-- XGBoost
-- LightGBM
-- CatBoost
-
-### Visualization
-
-- matplotlib
-- seaborn
-- plotly
-
-### Development Tools
-
-- Jupyter Notebook
-- uv
-- Kaggle API
-
-## Installation
-
-The project is intended to run with Python 3.12, as indicated by the repository’s `.python-version` file.
+## Getting started
 
 ```bash
 git clone https://github.com/osman-tkdmr/ING_Datathon.git
 cd ING_Datathon
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-If you use `uv`, the project can also be set up with:
-
-```bash
 uv sync
 ```
 
-## Usage
+Run the notebooks in order: `preprocessing.ipynb` → `model.ipynb` (or `baseline_model.ipynb` for the simpler benchmark). Kaggle API credentials are picked up automatically from `~/.config/kaggle/kaggle.json` (override with the `KAGGLE_CONFIG_DIR` environment variable).
 
-The notebooks are the main entry points:
+## Skills demonstrated
 
-1. Run `preprocessing.ipynb` to prepare the training and test datasets.
-2. Use `analysis.ipynb` to inspect the data and understand churn patterns.
-3. Run `baseline_model.ipynb` for a simpler XGBoost baseline.
-4. Use `model.ipynb` for the main LightGBM-based training workflow and submission export.
-
-The notebooks assume that the required CSV files are available locally or can be downloaded from Kaggle.
-
-## Reproducibility
-
-The repository contains some reproducibility signals:
-
-- `random_state=42` is used in several train/test and cross-validation steps
-- Dependency versions are locked in `uv.lock`
-- No dedicated configuration file for training parameters was detected
-
-## Future Improvements
-
-Potential next steps based on the current implementation:
-
-- Convert the notebook workflow into a modular training pipeline
-- Add automated tests for preprocessing and feature generation
-- Introduce experiment tracking and model registry tools
-- Expand feature engineering with lag-based or temporal features
-- Add explainability tools such as SHAP
-- Package the workflow into a CLI or API for repeatable deployment
-
-## License
-
-No license file detected.
-
-## Acknowledgements
-
-This repository references a Kaggle competition dataset and uses several open-source Python libraries. No additional acknowledgements or third-party citations were detected in the repository files.
+- **Data leakage detection & correction** — identifying temporal and cross-validation leakage that inflates offline metrics, and fixing it at the root cause rather than patching symptoms
+- **Feature engineering at scale** — vectorized pandas transformations validated for correctness before deployment
+- **Hyperparameter optimization** — Optuna-driven search against a custom, business-defined objective
+- **Model evaluation design** — working with non-standard, business-aligned metrics rather than defaulting to generic accuracy/AUC
+- **Explainable AI** — SHAP-based model interpretation for stakeholder-facing insights
+- **Reproducible ML engineering practices** — persisted experiment tracking, model artifacts, and portable environment configuration
