@@ -9,6 +9,7 @@ dependencies = [
     "dask>=2025.10.0",
     "fastparquet>=2024.11.0",
     "imbalanced-learn>=0.14.0",
+    "ipykernel>=7.3.0",
     "kaggle>=1.7.4.5",
     "kagglehub>=0.3.13",
     "lightgbm>=4.6.0",
